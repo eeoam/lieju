@@ -1,5 +1,6 @@
 
 name: cardinality
+description: Package for implementing a better Enum.
 
 language: GHC2021
 

@@ -1,3 +1,4 @@
+-- | The cardinality of a type is the number of values contained in the type.
 module Cardinality where
 
 import Data.Proxy (Proxy)
