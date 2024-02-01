@@ -1,0 +1,35 @@
+
+name: cardinality
+
+language: GHC2021
+
+default-extensions:
+  - DataKinds
+  - DeriveAnyClass
+  - DerivingStrategies
+  - TypeFamilies
+  - DefaultSignatures
+  - UndecidableInstances
+
+dependencies:
+  - base
+  - large-anon
+  - finite-typelits
+  - ghc-typelits-knownnat
+  - ghc-typelits-natnormalise
+  - random
+  - statistics
+  - download
+
+library:
+   source-dirs: src
+   ghc-options: 
+     - -fplugin=Data.Record.Anon.Plugin 
+     - -fplugin=GHC.TypeLits.KnownNat.Solver
+     - -fplugin=GHC.TypeLits.Normalise
+
+#executables:
+#  fun-risky-router-app: 
+#    main: fun-risky-router.lhs
+#    source-dirs: app
+
