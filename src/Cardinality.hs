@@ -15,6 +15,7 @@ import Data.Proxy
 
 import GHC.Generics
     ( (:+:) (..)
+    , (:*:) (..)
     )
 
 {- $version0 
@@ -44,3 +45,14 @@ instance (GMyEnum a, GMyEnum b) => GMyEnum (a :+: b) where
     fromGMyEnum = \case
         L1 x -> fromGMyEnum x
         R1 x -> fromGMyEnum x + gcardinality (Proxy @a)
+
+instance (GMyEnum a, GMyEnum b) => GMyEnum (a :*: b) where
+    gcardinality _ = gcardinality (Proxy @a) * gcardinality (Proxy @b)
+
+    toGMyEnum n = toGMyEnum q :*: toGMyEnum r
+        where
+            cardB = gcardinality (Proxy @b)
+            (q, r) = n `quotRem` cardB
+
+    fromGMyEnum (q :*: r) =
+        gcardinality (Proxy @b) * fromGMyEnum q + fromGMyEnum r
