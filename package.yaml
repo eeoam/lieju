@@ -8,6 +8,7 @@ default-extensions:
   - DataKinds
   - DeriveAnyClass
   - DerivingStrategies
+  - LambdaCase
   - TypeFamilies
   - DefaultSignatures
   - UndecidableInstances
