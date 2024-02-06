@@ -1,9 +1,9 @@
-module Demo where
+module Lieju.Demo where
 
 import Data.Void ( Void )
 import GHC.Generics ( Generic )
 import Data.Proxy ( Proxy(..) )
-import Cardinality
+import Lieju.Enum
 
 data Action = Code Bool | Eat Bool Bool | Sleep ()
     deriving stock (Show, Generic)

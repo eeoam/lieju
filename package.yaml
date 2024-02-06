@@ -1,5 +1,5 @@
 
-name: cardinality
+name: lieju
 description: Package for implementing a better Enum.
 
 language: GHC2021

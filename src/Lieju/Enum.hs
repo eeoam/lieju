@@ -1,6 +1,7 @@
 {-| The cardinality of a type is the number of values contained in the type.
+lièjǔ is pinyin for to list/enumerate
 -}
-module Cardinality (
+module Lieju.Enum (
     -- * Version 0
     -- $version0
       MyEnum(..)
@@ -8,6 +9,8 @@ module Cardinality (
 
     -- * Version 1
     -- $version1
+    , Enume(..)
+    , GEnume(..)
     ) where
 
 import Data.Proxy 
@@ -30,6 +33,16 @@ import GHC.Generics
 import Data.Kind ( Type )
 
 import Data.Void ( Void )
+
+import GHC.TypeNats
+    ( Nat
+    , KnownNat(..)
+    )
+
+-- package finite-typelits
+import Data.Finite
+    ( Finite
+    )
 
 {- $version0 
 @
@@ -108,3 +121,13 @@ instance (GMyEnum a, GMyEnum b) => GMyEnum (a :*: b) where
 
 {- $version1
 -}
+class Enume a where
+    type Cardinality a :: Nat
+    toEnume   :: Finite (Cardinality a) -> a
+    fromEnume :: a -> Finite(Cardinality a)
+
+class (KnownNat (GCardinality f)) => GEnume (f :: Type -> Type) where
+    type GCardinality f :: Nat
+    gToEnume :: f a -> Finite (GCardinality f)
+    gFromEnume :: Finite (GCardinality f) -> f x
+
