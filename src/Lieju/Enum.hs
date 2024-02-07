@@ -37,11 +37,18 @@ import Data.Void ( Void )
 import GHC.TypeNats
     ( Nat
     , KnownNat(..)
+    , type (+)
+    , type (*)
     )
 
 -- package finite-typelits
 import Data.Finite
     ( Finite
+    , shiftN
+    , weakenN
+    , separateSum
+    , combineProduct
+    , separateProduct
     )
 
 {- $version0 
@@ -78,7 +85,7 @@ class GMyEnum f where
 
 instance GMyEnum V1 where
     gcardinality _ = 0
-    toGMyEnum _ = error "GFinite: V1 has no inhabitants"
+    toGMyEnum _ = error "GMyEnum: V1 has no inhabitants"
     fromGMyEnum _ = error "GMyEnum: V1 has no inhabitants"
 
 instance GMyEnum U1 where
@@ -120,14 +127,91 @@ instance (GMyEnum a, GMyEnum b) => GMyEnum (a :*: b) where
 
 
 {- $version1
--}
+@
 class Enume a where
-    type Cardinality a :: Nat
-    toEnume   :: Finite (Cardinality a) -> a
-    fromEnume :: a -> Finite(Cardinality a)
+    type Cardinality a :: 'Nat'
+    toEnume   :: 'Finite' (Cardinality a) -> a
+    fromEnume :: a -> 'Finite' (Cardinality a)
+@
+-}
 
 class (KnownNat (GCardinality f)) => GEnume (f :: Type -> Type) where
     type GCardinality f :: Nat
-    gToEnume :: f a -> Finite (GCardinality f)
-    gFromEnume :: Finite (GCardinality f) -> f x
+    gToEnume   :: Finite (GCardinality f) -> f a
+    gFromEnume :: f a -> Finite (GCardinality f)
 
+
+instance (GEnume a) => GEnume (M1 _x _y a) where
+    type GCardinality (M1 _x _y a) = GCardinality a
+    gToEnume = M1 . gToEnume
+    gFromEnume = gFromEnume . unM1
+    
+
+instance GEnume V1 where
+    type GCardinality V1 = 0
+    gToEnume   _ = error "GEnume: V1 has no inhabitants"
+    gFromEnume _ = error "GEnume: V1 has no inhabitants"
+    
+
+instance GEnume U1 where
+    type GCardinality U1 = 1
+    gToEnume = const U1
+    gFromEnume   = const 0
+
+{-Does not compile 
+instance (Enume a) => GEnume (K1 _x a) where
+    type GCardinality (K1 _x a) = Cardinality a
+
+    gToEnume   :: Finite (GCardinality f) -> f a
+    gToEnume = K1 . gToEnume
+
+    gFromEnume :: f a -> Finite (GCardinality f)
+    gFromEnume = gFromEnume . unK1
+-}
+
+
+instance (GEnume a, GEnume b) => GEnume (a :+: b) where
+    type GCardinality (a :+: b) = GCardinality a + GCardinality b
+
+    gToEnume = either (L1 . gToEnume) (R1 . gToEnume) . separateSum
+
+    gFromEnume (L1 x) = weakenN . gFromEnume $ x
+    gFromEnume (R1 y) = shiftN  . gFromEnume $ y
+
+instance (GEnume a, GEnume b) => GEnume (a :*: b) where
+    type GCardinality (a :*: b) = GCardinality a * GCardinality b
+
+    gToEnume xy = let
+        (x,y) = separateProduct xy
+        in gToEnume x :*: gToEnume y
+
+    gFromEnume (x :*: y) = 
+        combineProduct  @(GCardinality a) @(GCardinality b) (weakenN $ gFromEnume x, weakenN $ gFromEnume y)
+
+{-
+
+
+
+
+
+-}
+
+class (Eq a, KnownNat (Cardinality a)) => Enume (a :: Type) where
+    type Cardinality a :: Nat
+    type Cardinality a = GCardinality (Rep a)
+
+    -- | Converts an index to its corresponding inhabitant. 
+    toEnume   :: Finite (Cardinality a) -> a
+    default toEnume :: (Generic a, GEnume (Rep a), Cardinality a ~ GCardinality (Rep a))
+                => Finite (Cardinality a) -> a
+    toEnume = to . gToEnume
+
+    -- | Converts an inhabitant to its corresponding index.
+    fromEnume :: a -> Finite (Cardinality a)
+    default fromEnume :: (Generic a, GEnume (Rep a), Cardinality a ~ GCardinality (Rep a))
+                      => a -> Finite (Cardinality a)
+    fromEnume = gFromEnume . from
+
+--instance Enume Void
+--instance Enume ()
+--instance Enume Bool

@@ -9,6 +9,7 @@ default-extensions:
   - DeriveAnyClass
   - DerivingStrategies
   - LambdaCase
+  - NoStarIsType
   - TypeFamilies
   - DefaultSignatures
   - UndecidableInstances
